@@ -6,14 +6,19 @@
 # 4. Appropriately labels the data set with descriptive variable names. 
 # 5. From the data set in step 4, creates a second, independent tidy data set with the average of each variable 
 #    for each activity and each subject.
-setwd("~/datasciencecoursera")
+setwd("~/datasciencecoursera/GettingAndCleaningDataProject")
+library(plyr)
 
 # First, read in the training and test sets
-train <- read.table("~/datasciencecoursera/UCI HAR Dataset/train/X_train.txt",colClasses="numeric",row.names=NULL)
-train_ID <- read.table("~/datasciencecoursera/UCI HAR Dataset/train/subject_train.txt",colClasses="numeric") # training subjects
+train <- read.table("~/datasciencecoursera/GettingAndCleaningDataProject/UCI HAR Dataset/train/X_train.txt",
+                    colClasses="numeric",row.names=NULL)
+train_ID <- read.table("~/datasciencecoursera/GettingAndCleaningDataProject/UCI HAR Dataset/train/subject_train.txt",
+                       colClasses="numeric") # training subjects
  
-test <- read.table("~/datasciencecoursera/UCI HAR Dataset/test/X_test.txt",colClasses="numeric",row.names=NULL)
-test_ID <- read.table("~/datasciencecoursera/UCI HAR Dataset/test/subject_test.txt",colClasses="numeric") # test subjects
+test <- read.table("~/datasciencecoursera/GettingAndCleaningDataProject/UCI HAR Dataset/test/X_test.txt",
+                   colClasses="numeric",row.names=NULL)
+test_ID <- read.table("~/datasciencecoursera/GettingAndCleaningDataProject/UCI HAR Dataset/test/subject_test.txt",
+                      colClasses="numeric") # test subjects
 
 ID <- rbind(train_ID,test_ID) # Combine IDs
 
@@ -23,7 +28,7 @@ moveData <- cbind(ID,moveData)
 names(moveData)[1] <- "Subject" # Rename first column of data frame
 
 ### 2. Extract only the measurements on the mean and standard deviation for each measurement
-features <- read.table("~/datasciencecoursera/UCI HAR Dataset/features.txt",row.names=NULL)
+features <- read.table("~/datasciencecoursera/GettingAndCleaningDataProject/UCI HAR Dataset/features.txt",row.names=NULL)
 mean_sd <- rep(NA,nrow(features)) # Initialize logical vector
 mean_sd <- grepl("mean",features$V2) # Find variables with mean
 mean_sd2 <- grepl("std",features$V2) # Fing variables with standard deviation
@@ -39,8 +44,8 @@ moveData <- subset(moveData,select=c(mean_sd_vars,ncol(moveData)))
 ### 3. Use descriptive activity names to name the activities in the data set.
 
 # First get activity codes 1-6
-train_activity <- read.table("~/datasciencecoursera/UCI HAR Dataset/train/y_train.txt") 
-test_activity <- read.table("~/datasciencecoursera/UCI HAR Dataset/test/y_test.txt")
+train_activity <- read.table("~/datasciencecoursera/GettingAndCleaningDataProject/UCI HAR Dataset/train/y_train.txt") 
+test_activity <- read.table("~/datasciencecoursera/GettingAndCleaningDataProject/UCI HAR Dataset/test/y_test.txt")
 # Rbind codes from training and test data, with training data on top and cbind to moveData 
 activity <- rbind(train_activity,test_activity)
 moveData <- cbind(activity,moveData)
@@ -70,12 +75,7 @@ names(moveData) <- gsub("-meanFreq()","_freq_mean",names(moveData),fixed=TRUE)
 names(moveData) <- gsub("-mean()","_mean",names(moveData),fixed=TRUE)
 names(moveData) <- gsub("-std()","_sd",names(moveData),fixed=TRUE)
 
-### 5. Create a second, independent tidy data set with the average of each variable for each activity and each subject
-# First, sort by subject and activity
-moveData <- moveData[order(moveData$Subject,moveData$Activity),]
-# Now, make a data table for quicker calculations
-dt_move <- data.table(moveData)
-dt_move[,list(mean=mean(age),sd=sd(age)),by=group]
-
+### 5. Create a second, independent tidy data set with the average of each variable for each activity and each subject, 
+#  write to .txt file
 summary <- ddply(moveData,.(Subject,Activity),numcolwise(mean))
-
+write.table(summary,"tidyData.txt",row.names=FALSE)
